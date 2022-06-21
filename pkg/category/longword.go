@@ -8,12 +8,14 @@ import (
 )
 
 var (
-	reg           *regexp.Regexp
+	magic         *regexp.Regexp
+	r             *regexp.Regexp
 	AlphaNumColon string = "alphanumcolon"
 )
 
 func init() {
-	reg, _ = regexp.Compile("[^a-zA-Z:/ _-]+")
+	r, _ = regexp.Compile("Logger")
+	magic, _ = regexp.Compile("[^a-zA-Z:/ -]+")
 }
 
 func CreateKeyFn() func(ctx context.Context, b []byte) (string, error) {
@@ -23,11 +25,22 @@ func CreateKeyFn() func(ctx context.Context, b []byte) (string, error) {
 }
 
 func CreateKey(b []byte) string {
-	words := strings.Split(reg.ReplaceAllString(string(b), " "), " ")
+	words := strings.Split(magic.ReplaceAllString(string(b), ""), " ")
 
 	sort.SliceStable(words, func(i int, j int) bool {
 		return len(words[i]) < len(words[j])
 	})
 
-	return words[len(words)-1]
+	var largest string
+	for i := len(words); i > 0; i-- {
+		if r.MatchString(words[i-1]) {
+			continue
+		} else if len(words[i-1]) > 120 {
+			continue
+		}
+		largest = words[i-1]
+		break
+	}
+
+	return largest
 }
