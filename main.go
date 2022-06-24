@@ -21,8 +21,9 @@ import (
 var (
 	data       []byte
 	err        error
-	freq       string = os.Getenv("EC_FREQ")
-	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
+	freq       string         = os.Getenv("EC_FREQ")
+	webhookUrl string         = os.Getenv("EC_TEAMSWEBHOOK")
+	totals     map[string]int = make(map[string]int, 10)
 )
 
 func main() {
@@ -83,13 +84,22 @@ func do() {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool { return results[keys[i]] > results[keys[j]] })
-
 	keys = keys[0:10]
 
-	var output string
+	newTotals := make(map[string]int, 10)
+	var output string = "COUNT:LASTCOUNT:FILE\n\r"
 	for k := range keys {
-		output = output + fmt.Sprintf("%d:%s\n\r", results[keys[k]], keys[k])
+		var last string
+		if _, ok := totals[keys[k]]; !ok {
+			last = "NEW"
+		} else {
+			last = fmt.Sprintf("%d", totals[keys[k]])
+		}
+
+		output = output + fmt.Sprintf("%d:%s:%s\n\r", results[keys[k]], last, keys[k])
+		newTotals[keys[k]] = results[keys[k]]
 	}
+	totals = newTotals
 
 	sendResults(output)
 
