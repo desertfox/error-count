@@ -4,7 +4,6 @@ import "context"
 
 type JobMeta struct {
 	Id   int
-	Type string
 	Data []byte
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -12,12 +13,24 @@ import (
 	"github.com/desertfox/gograylog"
 )
 
-func main() {
-	c := gograylog.New(os.Args[1], os.Args[2], os.Args[3])
+var (
+	data []byte
+	err  error
+)
 
-	data, err := c.Execute("kubernetes_namespace_name:portal* AND error", os.Args[4], []string{"message"}, 10000, 60*15)
-	if err != nil {
-		panic(err)
+func main() {
+	if len(os.Args) > 1 {
+		data, err = ioutil.ReadFile(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		c := gograylog.New(os.Getenv("EC_HOST"), os.Getenv("EC_USER"), os.Getenv("EC_PASS"))
+
+		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, 60*5)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	lines := strings.Split(string(data), "\n")
@@ -27,10 +40,9 @@ func main() {
 		jobs[i] = worker.Job{
 			Meta: worker.JobMeta{
 				Id:   i,
-				Type: category.AlphaNumColon,
 				Data: []byte(lines[i]),
 			},
-			ExecFn: category.CreateKeyFn(),
+			ExecFn: category.FileLineKeyFn(),
 		}
 	}
 
@@ -42,7 +54,6 @@ func main() {
 	go wp.Run(ctx)
 
 	var totals map[string]int = storage.Load("./totals.yaml")
-
 	for r := range wp.Results() {
 		if k, ok := totals[r.Key]; !ok {
 			totals[r.Key] = 1
@@ -53,7 +64,7 @@ func main() {
 	}
 
 	for k, v := range totals {
-		fmt.Printf("category:%v, count:%v\n", k, v)
+		fmt.Printf("count:%v\nkey:%v\n\n", v, k)
 	}
 
 	err = storage.Save("./totals.yaml", totals)
