@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,7 +15,6 @@ import (
 	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
 	"github.com/desertfox/gograylog"
 	"github.com/go-co-op/gocron"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -72,12 +73,20 @@ func do() {
 		}
 	}
 
-	data, err := yaml.Marshal(results)
-	if err != nil {
-		panic(err)
+	keys := make([]string, 0, len(results))
+	for key := range results {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool { return results[keys[i]] > results[keys[j]] })
+
+	keys = keys[0:10]
+
+	var output string
+	for k := range keys {
+		output = output + fmt.Sprintf("%s:%d\n", keys[k], results[keys[k]])
 	}
 
-	sendResults(string(data))
+	sendResults(output)
 
 	/*
 		var totals map[string]int = storage.Load("./totals.yaml")
