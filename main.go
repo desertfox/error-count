@@ -19,13 +19,15 @@ import (
 )
 
 var (
-	data []byte
-	err  error
+	data       []byte
+	err        error
+	freq       string = os.Getenv("EC_FREQ")
+	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
 )
 
 func main() {
 	s := gocron.NewScheduler(time.UTC)
-	s.Every("5m").Do(do)
+	s.Every(freq + "m").Do(do)
 	s.StartBlocking()
 }
 
@@ -38,9 +40,9 @@ func do() {
 	} else {
 		c := gograylog.New(os.Getenv("EC_HOST"), os.Getenv("EC_USER"), os.Getenv("EC_PASS"))
 
-		freq, _ := strconv.Atoi(os.Getenv("EC_FREQ"))
+		f, _ := strconv.Atoi(freq)
 
-		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, freq)
+		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, f)
 		if err != nil {
 			panic(err)
 		}
@@ -106,11 +108,8 @@ func do() {
 func sendResults(s string) {
 	mstClient := goteamsnotify.NewClient()
 
-	webhookUrl := os.Getenv("EC_TEAMSWEBHOOK")
-
-	// Create message using provided formatted title and text.
 	card := goteamsnotify.NewMessageCard()
-	card.Title = "Error Counts"
+	card.Title = fmt.Sprintf("Error Counts, Every %smin", freq)
 	card.Text = s
 
 	if err := mstClient.Send(webhookUrl, card); err != nil {
