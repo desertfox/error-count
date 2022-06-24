@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
+	"time"
 
 	"desertfox.dev/error-count/v1/pkg/category"
-	"desertfox.dev/error-count/v1/pkg/storage"
 	"desertfox.dev/error-count/v1/pkg/worker"
+	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
 	"github.com/desertfox/gograylog"
+	"github.com/go-co-op/gocron"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -19,6 +22,12 @@ var (
 )
 
 func main() {
+	s := gocron.NewScheduler(time.UTC)
+	s.Every("5m").Do(do)
+	s.StartBlocking()
+}
+
+func do() {
 	if len(os.Args) > 1 {
 		data, err = ioutil.ReadFile(os.Args[1])
 		if err != nil {
@@ -53,23 +62,50 @@ func main() {
 	go wp.Queue(jobs)
 	go wp.Run(ctx)
 
-	var totals map[string]int = storage.Load("./totals.yaml")
+	var results map[string]int = make(map[string]int)
 	for r := range wp.Results() {
-		if k, ok := totals[r.Key]; !ok {
-			totals[r.Key] = 1
+		if k, ok := results[r.Key]; !ok {
+			results[r.Key] = 1
 
 		} else {
-			totals[r.Key] = k + 1
+			results[r.Key] = k + 1
 		}
 	}
 
-	for k, v := range totals {
-		fmt.Printf("count:%v\nkey:%v\n\n", v, k)
-	}
-
-	err = storage.Save("./totals.yaml", totals)
+	data, err := yaml.Marshal(results)
 	if err != nil {
 		panic(err)
 	}
 
+	sendResults(string(data))
+
+	/*
+		var totals map[string]int = storage.Load("./totals.yaml")
+		for k, v := range totals {
+			fmt.Printf("count:%v\nkey:%v\n\n", v, k)
+		}
+		err = storage.Save("./totals.yaml", totals)
+		if err != nil {
+			panic(err)
+		}
+	*/
+}
+
+func sendResults(s string) {
+	mstClient := goteamsnotify.NewClient()
+
+	webhookUrl := os.Getenv("EC_TEAMSWEBHOOK")
+
+	// Create message using provided formatted title and text.
+	card := goteamsnotify.NewMessageCard()
+	card.Title = "Error Counts"
+	card.Text = s
+
+	if err := mstClient.Send(webhookUrl, card); err != nil {
+		log.Printf(
+			"failed to send message: %v",
+			err,
+		)
+		os.Exit(1)
+	}
 }
