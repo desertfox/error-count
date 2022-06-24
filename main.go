@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +38,9 @@ func do() {
 	} else {
 		c := gograylog.New(os.Getenv("EC_HOST"), os.Getenv("EC_USER"), os.Getenv("EC_PASS"))
 
-		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, 60*5)
+		freq, _ := strconv.Atoi(os.Getenv("EC_FREQ"))
+
+		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, freq)
 		if err != nil {
 			panic(err)
 		}
