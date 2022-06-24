@@ -83,7 +83,7 @@ func do() {
 
 	var output string
 	for k := range keys {
-		output = output + fmt.Sprintf("%s:%d\n", keys[k], results[keys[k]])
+		output = output + fmt.Sprintf("%s:%d\n\r", keys[k], results[keys[k]])
 	}
 
 	sendResults(output)
