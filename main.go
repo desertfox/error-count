@@ -96,7 +96,7 @@ func do() {
 			change = last - results[keys[k]]
 		}
 
-		output = output + fmt.Sprintf("%03d:%03d:%04d:%s\n\r", results[keys[k]], last, change, keys[k])
+		output = output + fmt.Sprintf("%03d:%03d:%+04d:%s\n\r", results[keys[k]], last, change, keys[k])
 		newTotals[keys[k]] = results[keys[k]]
 	}
 	totals = newTotals
