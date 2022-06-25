@@ -84,19 +84,19 @@ func do() {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool { return results[keys[i]] > results[keys[j]] })
+
 	keys = keys[0:10]
 
 	newTotals := make(map[string]int, 10)
-	var output string = "COUNT:LASTCOUNT:FILE\n\r"
+	var output string = "COUNT:PREV:+/-:FILE\n\r"
 	for k := range keys {
-		var last string
-		if _, ok := totals[keys[k]]; !ok {
-			last = "NEW"
-		} else {
-			last = fmt.Sprintf("%d", totals[keys[k]])
+		var last, change int = 0, 0
+		if _, exists := totals[keys[k]]; exists {
+			last = totals[keys[k]]
+			change = last - results[keys[k]]
 		}
 
-		output = output + fmt.Sprintf("%d:%s:%s\n\r", results[keys[k]], last, keys[k])
+		output = output + fmt.Sprintf("%3d:%3d:%3d:%s\n\r", results[keys[k]], last, change, keys[k])
 		newTotals[keys[k]] = results[keys[k]]
 	}
 	totals = newTotals
