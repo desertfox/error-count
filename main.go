@@ -21,15 +21,50 @@ import (
 var (
 	data       []byte
 	err        error
-	freq       string         = os.Getenv("EC_FREQ")
-	webhookUrl string         = os.Getenv("EC_TEAMSWEBHOOK")
-	totals     map[string]int = make(map[string]int, 10)
+	freq       string           = os.Getenv("EC_FREQ")
+	webhookUrl string           = os.Getenv("EC_TEAMSWEBHOOK")
+	history    []map[string]int = make([]map[string]int, 0)
+	totals     map[string]int   = make(map[string]int, 10)
 )
 
 func main() {
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(freq + "m").Do(do)
+	s.Every("60m").Do(report)
 	s.StartBlocking()
+}
+
+func sortKeys(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool { return m[keys[i]] > m[keys[j]] })
+
+	return keys
+}
+
+func report() {
+	var hourTotals map[string]int = make(map[string]int)
+	for i := range history {
+		for file := range history[i] {
+			if v, ok := hourTotals[file]; !ok {
+				hourTotals[file] = history[i][file]
+			} else {
+				hourTotals[file] = history[i][file] + v
+			}
+		}
+	}
+
+	sortedKeys := sortKeys(hourTotals)
+	var output string = "COUNT_FILE\n\r"
+	for k := range sortedKeys {
+		output = output + fmt.Sprintf("%03d_%s\n\r", hourTotals[sortedKeys[k]], sortedKeys[k])
+	}
+
+	sendResults("Error Count Hour Totals", output)
+
+	history = make([]map[string]int, 0)
 }
 
 func do() {
@@ -79,47 +114,32 @@ func do() {
 		}
 	}
 
-	keys := make([]string, 0, len(results))
-	for key := range results {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool { return results[keys[i]] > results[keys[j]] })
-
-	keys = keys[0:10]
+	sortedKeys := sortKeys(results)
+	sortedKeys = sortedKeys[0:10]
 
 	newTotals := make(map[string]int, 10)
 	var output string = "COUNT:PREV:+/-:FILE\n\r"
-	for k := range keys {
-		var last, change int = 0, 0
-		if _, exists := totals[keys[k]]; exists {
-			last = totals[keys[k]]
-			change = last - results[keys[k]]
+	for k := range sortedKeys {
+		var last, change int = 0, results[sortedKeys[k]]
+		if _, exists := totals[sortedKeys[k]]; exists {
+			last = totals[sortedKeys[k]]
+			change = last - results[sortedKeys[k]]
 		}
 
-		output = output + fmt.Sprintf("%03d:%03d:%+04d:%s\n\r", results[keys[k]], last, change, keys[k])
-		newTotals[keys[k]] = results[keys[k]]
+		output = output + fmt.Sprintf("%03d_%03d_%+04d_%s\n\r", results[sortedKeys[k]], last, change, sortedKeys[k])
+		newTotals[sortedKeys[k]] = results[sortedKeys[k]]
 	}
 	totals = newTotals
+	history = append(history, newTotals)
 
-	sendResults(output)
-
-	/*
-		var totals map[string]int = storage.Load("./totals.yaml")
-		for k, v := range totals {
-			fmt.Printf("count:%v\nkey:%v\n\n", v, k)
-		}
-		err = storage.Save("./totals.yaml", totals)
-		if err != nil {
-			panic(err)
-		}
-	*/
+	sendResults(fmt.Sprintf("Error Counts, Every %smin", freq), output)
 }
 
-func sendResults(s string) {
+func sendResults(t, s string) {
 	mstClient := goteamsnotify.NewClient()
 
 	card := goteamsnotify.NewMessageCard()
-	card.Title = fmt.Sprintf("Error Counts, Every %smin", freq)
+	card.Title = t
 	card.Text = s
 
 	if err := mstClient.Send(webhookUrl, card); err != nil {
