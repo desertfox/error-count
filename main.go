@@ -80,7 +80,8 @@ func do() {
 
 		data, err = c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, f)
 		if err != nil {
-			panic(err)
+			fmt.Println("Unable to make graylog request", err)
+			return
 		}
 	}
 
