@@ -78,8 +78,8 @@ func (l Ledgers) TotalLedger() Ledger {
 	return nl
 }
 
-func (l Ledgers) Add(newL Ledger) {
-	l = append(l, newL)
+func (l *Ledgers) Add(newL Ledger) {
+	*l = append(*l, newL)
 }
 
 func (l Ledgers) GetLast() Ledger {
