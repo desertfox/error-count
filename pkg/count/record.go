@@ -26,8 +26,10 @@ func NewLedger() Ledger {
 }
 
 func (l Ledger) Add(r Record) {
-	if v, ok := l[r.File]; ok {
-		v.Count++
+	if _, ok := l[r.File]; ok {
+		count := l[r.File]
+		count.Count++
+		l[r.File] = count
 	} else {
 		l[r.File] = Count{
 			Record: r,
