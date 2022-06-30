@@ -83,5 +83,9 @@ func (l Ledgers) Add(newL Ledger) {
 }
 
 func (l Ledgers) GetLast() Ledger {
+	if len(l) == 0 {
+		return NewLedger()
+	}
+
 	return l[len(l)-1]
 }
