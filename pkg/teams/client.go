@@ -7,11 +7,7 @@ import (
 	goteamsnotify "github.com/atc0005/go-teams-notify"
 )
 
-var (
-	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
-)
-
-func SendResults(t, s string) {
+func SendResults(webhookUrl, t, s string) {
 	mstClient, _ := goteamsnotify.NewClient()
 	card := goteamsnotify.NewMessageCard()
 	card.Title = t
