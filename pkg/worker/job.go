@@ -1,35 +1,32 @@
 package worker
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"time"
 
-type JobMeta struct {
-	Id   int
-	Data []byte
-}
-
-type FnExec func(ctx context.Context, b []byte) (string, error)
+	"desertfox.dev/error-count/v1/pkg/count"
+)
 
 type Job struct {
-	Meta   JobMeta
+	Data   string
 	ExecFn FnExec
 }
-type Result struct {
-	Key string
-	Job Job
-	Err error
-}
 
-func (j Job) execute(ctx context.Context) Result {
-	key, err := j.ExecFn(ctx, j.Meta.Data)
+type FnExec func(ctx context.Context, s string) (string, int, error)
+
+func (j Job) execute(ctx context.Context) count.Record {
+	file, line, err := j.ExecFn(ctx, j.Data)
 	if err != nil {
-		return Result{
+		fmt.Println(err)
+		return count.Record{
 			Err: err,
-			Job: j,
 		}
 	}
 
-	return Result{
-		Key: key,
-		Job: j,
+	return count.Record{
+		File:    file,
+		Line:    line,
+		Created: time.Now(),
 	}
 }

@@ -3,19 +3,21 @@ package worker
 import (
 	"context"
 	"sync"
+
+	"desertfox.dev/error-count/v1/pkg/count"
 )
 
 type Pool struct {
 	instances int
 	jobs      chan Job
-	results   chan Result
+	results   chan count.Record
 }
 
 func NewWP(instances int) Pool {
 	return Pool{
 		instances: instances,
 		jobs:      make(chan Job, instances),
-		results:   make(chan Result, instances),
+		results:   make(chan count.Record, instances),
 	}
 }
 
@@ -26,7 +28,7 @@ func (wp Pool) Queue(jobs []Job) {
 	close(wp.jobs)
 }
 
-func (wp Pool) Results() <-chan Result {
+func (wp Pool) Results() <-chan count.Record {
 	return wp.results
 }
 
@@ -40,7 +42,7 @@ func (wp Pool) Run(ctx context.Context) {
 	close(wp.results)
 }
 
-func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results chan<- Result) {
+func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results chan<- count.Record) {
 	defer wg.Done()
 	for {
 		select {
@@ -50,7 +52,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results ch
 			}
 			results <- job.execute(ctx)
 		case <-ctx.Done():
-			results <- Result{
+			results <- count.Record{
 				Err: ctx.Err(),
 			}
 			return
