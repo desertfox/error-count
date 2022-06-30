@@ -4,11 +4,13 @@ import (
 	"log"
 	"os"
 
-	goteamsnotify "github.com/atc0005/go-teams-notify"
+	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
 )
 
 func SendResults(webhookUrl, t, s string) {
-	mstClient, _ := goteamsnotify.NewClient()
+	mstClient := goteamsnotify.NewClient()
+	mstClient.SkipWebhookURLValidationOnSend(true)
+
 	card := goteamsnotify.NewMessageCard()
 	card.Title = t
 	card.Text = s
