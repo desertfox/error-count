@@ -68,6 +68,18 @@ func (l Ledger) GetTopFileInstances(c int) []string {
 	return keys[0:c]
 }
 
+func (l *Ledgers) Add(newL Ledger) {
+	*l = append(*l, newL)
+}
+
+func (l Ledgers) GetLast() Ledger {
+	if len(l) == 0 {
+		return NewLedger()
+	}
+
+	return l[0]
+}
+
 func (l Ledgers) TotalLedger() Ledger {
 	nl := NewLedger()
 
@@ -78,16 +90,4 @@ func (l Ledgers) TotalLedger() Ledger {
 	}
 
 	return nl
-}
-
-func (l *Ledgers) Add(newL Ledger) {
-	*l = append(*l, newL)
-}
-
-func (l Ledgers) GetLast() Ledger {
-	if len(l) == 0 {
-		return NewLedger()
-	}
-
-	return l[len(l)-1]
 }

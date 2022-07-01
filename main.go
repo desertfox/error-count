@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	data       []byte
-	err        error
 	freq       string = os.Getenv("EC_FREQ")
 	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
 	ledgers           = make(count.Ledgers, 0)
@@ -54,6 +52,8 @@ func do() {
 		}
 	}
 	ledgers.Add(ledger)
+
+	fmt.Printf("%v\n", ledgers)
 
 	var (
 		output     string = "COUNT_PREV_+/-_FILE\n\r"
