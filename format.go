@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	header string = "COUNT_PREV_+/-_FILE<br>"
+	header string = "COUNT_PREV_+/-_FILE <br> "
 )
 
 func totals(ls count.Ledgers) string {
