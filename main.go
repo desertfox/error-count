@@ -24,9 +24,9 @@ var (
 func main() {
 	s := gocron.NewScheduler(time.UTC)
 
-	s.Every(freq + "m").Do(doInterval)
-	s.Every("60m").Do(doHour)
 	s.Every("24h").Do(doDay)
+	s.Every("60m").Do(doHour)
+	s.Every(freq + "m").Do(doInterval)
 
 	s.StartBlocking()
 }
@@ -68,9 +68,7 @@ func doHour() {
 	ledger := hLedgers.TotalLedger()
 	dLedgers.Add(ledger)
 	teams.SendResults(webhookUrl, "1h Error Count.", totals(dLedgers))
-	if len(hLedgers) >= 6 {
-		hLedgers = make(count.Ledgers, 0)
-	}
+	hLedgers = make(count.Ledgers, 0)
 }
 
 func doDay() {
