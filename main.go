@@ -53,10 +53,8 @@ func do() {
 	}
 	ledgers.Add(ledger)
 
-	var (
-		output     string = "COUNT_PREV_+/-_FILE\n\r"
-		prevLedger        = ledgers.GetLast()
-	)
+	output := "COUNT_PREV_+/-_FILE\n\r"
+	prevLedger := ledgers.GetLast()
 	for _, file := range ledger.GetTopFileInstances(10) {
 		c := ledger.GetCount(file)
 		pc := prevLedger.GetCount(file)
@@ -68,13 +66,15 @@ func do() {
 }
 
 func report() {
-	totals := ledgers.TotalLedger()
-	var output string = "COUNT_FILE\n\r"
-	for _, count := range totals {
-		output = output + fmt.Sprintf("%03d_%s\n\r", count.Count, count.Record.File)
+	ledger := ledgers.TotalLedger()
+	output := "COUNT_FILE\n\r"
+	for _, file := range ledger.GetTopFileInstances(10) {
+		c := ledger.GetCount(file)
+
+		output = output + fmt.Sprintf("%03d_%s\n\r", c.Count, c.Record.File)
 	}
 	teams.SendResults(webhookUrl, "Error Count Hour Totals", output)
-	//
+
 	if len(ledgers) >= 6 {
 		ledgers = make(count.Ledgers, 0)
 	}
