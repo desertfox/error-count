@@ -69,12 +69,16 @@ func doInterval() {
 func doHour() {
 	ledger := hLedgers.TotalLedger()
 	dLedgers.Add(ledger)
+
 	teams.SendResults(webhookUrl, "1h Error Count.", totals(dLedgers))
+
 	hLedgers = make(count.Ledgers, 0)
 }
 
 func doDay() {
 	ledger := dLedgers.TotalLedger()
+
 	teams.SendResults(webhookUrl, "24h Error Count.", totals(count.Ledgers{ledger}))
+
 	dLedgers = make(count.Ledgers, 0)
 }

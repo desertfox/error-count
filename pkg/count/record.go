@@ -82,7 +82,7 @@ func (l *Ledgers) Add(newL Ledger) {
 }
 
 func (l Ledgers) GetPrev() Ledger {
-	if len(l) <= 1 {
+	if len(l) < 2 {
 		return NewLedger()
 	}
 
@@ -90,7 +90,7 @@ func (l Ledgers) GetPrev() Ledger {
 }
 
 func (l Ledgers) GetLast() Ledger {
-	if len(l) <= 1 {
+	if len(l) < 1 {
 		return NewLedger()
 	}
 
