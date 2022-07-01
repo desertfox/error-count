@@ -17,16 +17,18 @@ import (
 var (
 	freq       string = os.Getenv("EC_FREQ")
 	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
-	hLedgers          = make(count.Ledgers, 0)
+	hLedgers          = make(count.Ledgers, 0, 6)
 	dLedgers          = make(count.Ledgers, 0, 24)
 )
 
 func main() {
 	s := gocron.NewScheduler(time.UTC)
 
-	s.Every("24h").Do(doDay)
-	s.Every("60m").Do(doHour)
 	s.Every(freq + "m").Do(doInterval)
+
+	s.Every("60m").Do(doHour)
+
+	s.Every("24h").Do(doDay)
 
 	s.StartBlocking()
 }
@@ -67,12 +69,12 @@ func doInterval() {
 func doHour() {
 	ledger := hLedgers.TotalLedger()
 	dLedgers.Add(ledger)
-	teams.SendResults(webhookUrl, "1h Error Count.", totals(dLedgers))
-	hLedgers = make(count.Ledgers, 0)
+	teams.SendResults(webhookUrl, "1h Error Count.", totals(hLedgers))
+	hLedgers = make(count.Ledgers, 0, 6)
 }
 
 func doDay() {
 	ledger := dLedgers.TotalLedger()
 	teams.SendResults(webhookUrl, "24h Error Count.", totals(count.Ledgers{ledger}))
-	dLedgers = make(count.Ledgers, 0)
+	dLedgers = make(count.Ledgers, 0, 24)
 }
