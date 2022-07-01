@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	header string = "COUNT_PREV_+/-_FILE\n\r"
+	header string = "COUNT_PREV_+/-_FILE<br>"
 )
 
 func totals(ls count.Ledgers) string {
@@ -19,7 +19,7 @@ func totals(ls count.Ledgers) string {
 		c := l.GetCount(file)
 		pc := pL.GetCount(file)
 
-		output = output + fmt.Sprintf("* %03d_%03d_%+04d_%s:%d<br>", c.Count, pc.Count, c.Count-pc.Count, c.Record.File, c.Record.Line)
+		output = output + fmt.Sprintf("* %03d_%03d_%+04d_%s:%d <br> ", c.Count, pc.Count, c.Count-pc.Count, c.Record.File, c.Record.Line)
 	}
 
 	return output
