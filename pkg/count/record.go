@@ -39,8 +39,10 @@ func (l Ledger) Add(r Record) {
 }
 
 func (l Ledger) AddCount(f string, c Count) {
-	if v, ok := l[f]; ok {
-		v.Count = v.Count + c.Count
+	if _, ok := l[f]; ok {
+		count := l[f]
+		count.Count = count.Count + c.Count
+		l[f] = count
 	} else {
 		l[f] = c
 	}
