@@ -73,7 +73,7 @@ func (l *Ledgers) Add(newL Ledger) {
 }
 
 func (l Ledgers) GetLast() Ledger {
-	if len(l) == 0 {
+	if len(l) <= 1 {
 		return NewLedger()
 	}
 
