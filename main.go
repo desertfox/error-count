@@ -17,17 +17,21 @@ import (
 var (
 	freq       string = os.Getenv("EC_FREQ")
 	webhookUrl string = os.Getenv("EC_TEAMSWEBHOOK")
-	ledgers           = make(count.Ledgers, 0)
+	hLedgers          = make(count.Ledgers, 0)
+	dLedgers          = make(count.Ledgers, 0, 24)
 )
 
 func main() {
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(freq + "m").Do(do)
-	s.Every("60m").Do(report)
+
+	s.Every(freq + "m").Do(doInterval)
+	s.Every("60m").Do(doHour)
+	s.Every("24h").Do(doDay)
+
 	s.StartBlocking()
 }
 
-func do() {
+func doInterval() {
 	lines := strings.Split(doQuery(), "\n")
 	jobs := make([]worker.Job, len(lines))
 
@@ -51,31 +55,26 @@ func do() {
 			ledger.Add(r)
 		}
 	}
-	ledgers.Add(ledger)
+	hLedgers.Add(ledger)
 
-	output := "COUNT_PREV_+/-_FILE\n\r"
-	prevLedger := ledgers.GetLast()
-	for _, file := range ledger.GetTopFileInstances(10) {
-		c := ledger.GetCount(file)
-		pc := prevLedger.GetCount(file)
-
-		output = output + fmt.Sprintf("%03d_%03d_%+04d_%s:%d\n\r", c.Count, pc.Count, c.Count-pc.Count, c.Record.File, c.Record.Line)
-	}
-
-	teams.SendResults(webhookUrl, fmt.Sprintf("Error Counts, Every %smin", freq), output)
+	teams.SendResults(
+		webhookUrl,
+		fmt.Sprintf("%sm Error Counts", freq),
+		totals(hLedgers),
+	)
 }
 
-func report() {
-	ledger := ledgers.TotalLedger()
-	output := "COUNT_FILE\n\r"
-	for _, file := range ledger.GetTopFileInstances(10) {
-		c := ledger.GetCount(file)
-
-		output = output + fmt.Sprintf("%03d_%s\n\r", c.Count, c.Record.File)
+func doHour() {
+	ledger := hLedgers.TotalLedger()
+	dLedgers.Add(ledger)
+	teams.SendResults(webhookUrl, "1h Error Count.", totals(dLedgers))
+	if len(hLedgers) >= 6 {
+		hLedgers = make(count.Ledgers, 0)
 	}
-	teams.SendResults(webhookUrl, "Error Count Hour Totals", output)
+}
 
-	if len(ledgers) >= 6 {
-		ledgers = make(count.Ledgers, 0)
-	}
+func doDay() {
+	ledger := dLedgers.TotalLedger()
+	teams.SendResults(webhookUrl, "24h Error Count.", totals(count.Ledgers{ledger}))
+	dLedgers = make(count.Ledgers, 0)
 }

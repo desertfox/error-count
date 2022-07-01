@@ -78,12 +78,20 @@ func (l *Ledgers) Add(newL Ledger) {
 	*l = append(*l, newL)
 }
 
-func (l Ledgers) GetLast() Ledger {
+func (l Ledgers) GetPrev() Ledger {
 	if len(l) <= 1 {
 		return NewLedger()
 	}
 
 	return l[len(l)-2]
+}
+
+func (l Ledgers) GetLast() Ledger {
+	if len(l) <= 1 {
+		return NewLedger()
+	}
+
+	return l[len(l)-1]
 }
 
 func (l Ledgers) TotalLedger() Ledger {
