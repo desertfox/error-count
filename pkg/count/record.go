@@ -77,7 +77,7 @@ func (l Ledgers) GetLast() Ledger {
 		return NewLedger()
 	}
 
-	return l[0]
+	return l[len(l)-2]
 }
 
 func (l Ledgers) TotalLedger() Ledger {
