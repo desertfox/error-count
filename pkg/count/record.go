@@ -59,6 +59,10 @@ func (l Ledger) GetCount(file string) Count {
 }
 
 func (l Ledger) GetTopFileInstances(c int) []string {
+	if len(l) < c {
+		return []string{}
+	}
+
 	keys := make([]string, 0, len(l))
 	for key := range l {
 		keys = append(keys, key)
