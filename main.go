@@ -56,17 +56,20 @@ func doInterval() {
 	intervalLedgers.Add(ledger)
 
 	if len(intervalLedgers) == 6 {
-		hl := intervalLedgers.TotalLedger()
-		hourLedgers.Add(hl)
-		intervalLedgers = make(count.Ledgers, 0)
+		hourLedgers.Add(intervalLedgers.TotalLedger())
+	}
+
+	var t count.Ledgers = hourLedgers
+	if len(hourLedgers) == 0 {
+		t = count.Ledgers{intervalLedgers.TotalLedger()}
 	}
 
 	teams.SendResults(
 		webhookUrl,
 		fmt.Sprintf("%sm Error Counts", freq),
 		totals(
-			hourLedgers.TotalLedger(),
-			hourLedgers.GetLast(),
+			t.TotalLedger(),
+			t.GetLast(),
 			intervalLedgers.GetPrev(),
 			intervalLedgers.GetLast(),
 		),
