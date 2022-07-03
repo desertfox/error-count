@@ -29,7 +29,7 @@ func FileLine(s string) (string, int, error) {
 func getFile(s string) string {
 	parts := strings.Split(fileRe.FindString(s), "/")
 
-	return strings.Join(parts[2:], "::")
+	return strings.Join(parts[2:], ":")
 }
 
 func getLine(s string) int {
