@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	fileRe     = regexp.MustCompile(`/[/\w+-]+.pm`)
+	fileRe     = regexp.MustCompile(`/lib/[/\w+-]+`)
 	filelineRe = regexp.MustCompile(`line \d+`)
 )
 
@@ -27,7 +27,9 @@ func FileLine(s string) (string, int, error) {
 }
 
 func getFile(s string) string {
-	return fileRe.FindString(s)
+	parts := strings.Split(fileRe.FindString(s), "/")
+
+	return strings.Join(parts[2:], "::")
 }
 
 func getLine(s string) int {
