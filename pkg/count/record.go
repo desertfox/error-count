@@ -33,7 +33,7 @@ func (l Ledger) Add(r Record) {
 	} else {
 		l[r.File] = Count{
 			Record: r,
-			Count:  0,
+			Count:  1,
 		}
 	}
 }
