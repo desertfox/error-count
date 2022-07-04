@@ -3,6 +3,7 @@ package category
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,9 +28,12 @@ func FileLine(s string) (string, int, error) {
 }
 
 func getFile(s string) string {
-	parts := strings.Split(fileRe.FindString(s), "/")
+	f := fileRe.FindString(s)
+
+	parts := strings.Split(f, "/")
 
 	if len(parts) < 2 {
+		fmt.Println(s, f)
 		return strings.Join(parts, "::")
 	}
 
