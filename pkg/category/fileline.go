@@ -29,7 +29,6 @@ func FileLine(s string) (string, int, error) {
 
 func getFile(s string) string {
 	f := fileRe.FindString(s)
-
 	parts := strings.Split(f, "/")
 
 	if len(parts) < 2 {
@@ -37,7 +36,12 @@ func getFile(s string) string {
 		return strings.Join(parts, "::")
 	}
 
-	return strings.Join(parts[2:], "::")
+	var chomp int = 2
+	if len(parts) > 1 && parts[2] == "perl5" {
+		chomp = 2
+	}
+
+	return strings.Join(parts[chomp:], "::")
 }
 
 func getLine(s string) int {

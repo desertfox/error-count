@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	header string = "<pre>DAY  HOUR PREV  NOW +/-    FILE <br>"
+	header string = "<pre>DAY  HOUR PREV NOW  +/-    FILE <br>"
 	line   string = "%04d_%04d_%04d_%04d_%+05d  %s %d <br>"
 )
 
