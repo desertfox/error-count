@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	fileRe     = regexp.MustCompile(`/lib/[/\w+-]+`)
+	fileRe     = regexp.MustCompile(`/[/\w+-]+`)
+	libFileRe  = regexp.MustCompile(`/lib/[/\w+-]+`)
 	filelineRe = regexp.MustCompile(`line \d+`)
 )
 
@@ -28,8 +29,12 @@ func FileLine(s string) (string, int, error) {
 }
 
 func getFile(s string) string {
-	f := fileRe.FindString(s)
+	f := libFileRe.FindString(s)
 	parts := strings.Split(f, "/")
+
+	if len(parts) == 0 {
+		return fileRe.FindString(s)
+	}
 
 	if len(parts) < 2 {
 		fmt.Println(s, f)
@@ -38,7 +43,7 @@ func getFile(s string) string {
 
 	var chomp int = 2
 	if len(parts) > 1 && parts[2] == "perl5" {
-		chomp = 2
+		chomp = 3
 	}
 
 	return strings.Join(parts[chomp:], "::")
