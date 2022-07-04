@@ -13,7 +13,7 @@ var (
 
 func totals(day, hour, prev, last count.Ledger) string {
 	var output string = header
-	for _, file := range day.GetTopFileInstances(15) {
+	for _, file := range day.GetTopFileInstances(30) {
 		d := day.GetCount(file)
 		h := hour.GetCount(file)
 		p := prev.GetCount(file)
