@@ -29,6 +29,10 @@ func FileLine(s string) (string, int, error) {
 func getFile(s string) string {
 	parts := strings.Split(fileRe.FindString(s), "/")
 
+	if len(parts) < 2 {
+		return strings.Join(parts, "::")
+	}
+
 	return strings.Join(parts[2:], "::")
 }
 
