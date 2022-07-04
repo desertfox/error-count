@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	header string = "<pre>DAY HOUR PREV NOW +/- FILE <br>"
-	line   string = "%04d_%04d_%04d_%04d_%+05d--->%s %d <br>"
+	header string = "<pre>DAY  HOUR  PREV NOW +/-     FILE <br>"
+	line   string = "%04d_%04d_%04d_%04d_%+05d  %s %d <br>"
 )
 
 func totals(day, hour, prev, last count.Ledger) string {
