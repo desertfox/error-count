@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	header string = "<pre>DAY  HOUR PREV NOW  +/-    FILE <br>"
-	line   string = "%04d_%04d_%04d_%04d_%+05d  %s %d <br>"
+	header string = "<pre>DAY  HOUR PREV NOW  +/- FIRST_SEEN FILE <br>"
+	line   string = "%04d_%04d_%04d_%04d_%+05d %s %s %d <br>"
 )
 
 func totals(day, hour, prev, last count.Ledger) string {
@@ -19,7 +19,7 @@ func totals(day, hour, prev, last count.Ledger) string {
 		p := prev.GetCount(file)
 		c := last.GetCount(file)
 
-		output = output + fmt.Sprintf(line, d.Count, h.Count, p.Count, c.Count, c.Count-p.Count, d.Record.File, d.Record.Line)
+		output = output + fmt.Sprintf(line, d.Count, h.Count, p.Count, c.Count, c.Count-p.Count, count.TimeLedger[file], d.Record.File, d.Record.Line)
 	}
 	output = output + "</pre>"
 

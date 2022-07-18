@@ -5,11 +5,12 @@ import (
 	"time"
 )
 
+var TimeLedger map[string]time.Time = make(map[string]time.Time, 0)
+
 type Record struct {
-	File    string
-	Line    int
-	Created time.Time
-	Err     error
+	File string
+	Line int
+	Err  error
 }
 
 type Count struct {
@@ -35,6 +36,10 @@ func (l Ledger) Add(r Record) {
 			Record: r,
 			Count:  1,
 		}
+	}
+
+	if _, ok := TimeLedger[r.File]; !ok {
+		TimeLedger[r.File] = time.Now()
 	}
 }
 

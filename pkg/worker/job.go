@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"desertfox.dev/error-count/v1/pkg/count"
 )
@@ -25,8 +24,7 @@ func (j Job) execute(ctx context.Context) count.Record {
 	}
 
 	return count.Record{
-		File:    file,
-		Line:    line,
-		Created: time.Now(),
+		File: file,
+		Line: line,
 	}
 }
