@@ -25,7 +25,7 @@ func FileLine(s string) (string, int, error) {
 	if filelineRe.MatchString(s) {
 		return getFile(s), getLine(s), nil
 	}
-	return "unknown", 0, errors.New("no match found")
+	return "", 0, errors.New("no match found")
 }
 
 func getFile(s string) string {
