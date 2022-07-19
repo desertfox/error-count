@@ -2,7 +2,6 @@ package teams
 
 import (
 	"log"
-	"os"
 
 	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
 )
@@ -20,6 +19,5 @@ func SendResults(webhookUrl, t, s string) {
 			"failed to send message: %v",
 			err,
 		)
-		os.Exit(1)
 	}
 }
