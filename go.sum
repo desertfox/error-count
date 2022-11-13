@@ -3,8 +3,8 @@ github.com/atc0005/go-teams-notify/v2 v2.6.1/go.mod h1:xo6GejLDHn3tWBA181F8LrllI
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/desertfox/gograylog v1.0.10 h1:fbOZAUaueU7uqCfVVD08/vbek/NATGE2d6gScF9dYuI=
-github.com/desertfox/gograylog v1.0.10/go.mod h1:c6D9tWl0WDzWTAjmVfwSJB4ZondCQym+ijzGZETx4uU=
+github.com/desertfox/gograylog v1.0.11 h1:Fvq4G4SOjPs2F9pc4CPYglqmZO7sofPwjVatiU8SZDI=
+github.com/desertfox/gograylog v1.0.11/go.mod h1:c6D9tWl0WDzWTAjmVfwSJB4ZondCQym+ijzGZETx4uU=
 github.com/go-co-op/gocron v1.14.0 h1:Fphr0ZWKtr6V33jjUdhF7ggwI0idt/RxBxwybIwr6Zo=
 github.com/go-co-op/gocron v1.14.0/go.mod h1:HfX00TY7w5syy3awgLeo0Po9MAkYDbz7hQGvwWcQSqg=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
