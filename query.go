@@ -18,11 +18,11 @@ func doQuery() string {
 		return string(data)
 	}
 
-	c := gograylog.New(os.Getenv("EC_HOST"), os.Getenv("EC_USER"), os.Getenv("EC_PASS"))
+	c := gograylog.New(graylogHost, graylogUser, os.Getenv("EC_PASS"))
 
 	f, _ := strconv.Atoi(freq)
 
-	data, err := c.Execute(os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID"), []string{"message"}, 10000, f)
+	data, err := c.Execute(graylogQuery, graylogStreamID, []string{"message"}, 10000, f)
 	if err != nil {
 		fmt.Println("Unable to make graylog request", err)
 		return ""

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -15,11 +14,9 @@ import (
 )
 
 var (
-	freq            string = os.Getenv("EC_FREQ")
-	webhookUrl      string = os.Getenv("EC_TEAMSWEBHOOK")
-	intervalLedgers        = make(count.Ledgers, 0)
-	hourLedgers            = make(count.Ledgers, 0)
-	start                  = time.Now()
+	intervalLedgers = make(count.Ledgers, 0)
+	hourLedgers     = make(count.Ledgers, 0)
+	start           = time.Now()
 )
 
 func main() {
@@ -67,7 +64,7 @@ func doInterval() {
 
 	teams.SendResults(
 		webhookUrl,
-		fmt.Sprintf("%sm Error Counts. Uptime: %s", freq, time.Since(start)),
+		fmt.Sprintf("%s %sm Error Counts. Uptime: %s", teamsTitle, freq, time.Since(start)),
 		totals(
 			t.TotalLedger(),
 			t.GetLast(),
