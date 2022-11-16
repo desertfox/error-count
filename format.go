@@ -32,9 +32,9 @@ func totals(day, hour, prev, last count.Ledger) string {
 */
 
 type line struct {
-	day, hour, prev, now, diff int
-	seen, file                 string
-	line                       int
+	Day, Hour, Prev, Now, Diff int
+	Seen, File                 string
+	Line                       int
 }
 
 func totals(day, hour, prev, last count.Ledger) string {
@@ -47,13 +47,13 @@ func totals(day, hour, prev, last count.Ledger) string {
 		</tr>\n
 		{{ range .Data }}
 			<tr>
-				<td>{{.day}}</td>
-				<td>{{.hour}}</td>
-				<td>{{.prev}}</td>
-				<td>{{.now}}</td>
-				<td>{{.diff}}</td>
-				<td>{{.seen}}</td>
-				<td>{{.file}}:{{.line}}</td>
+				<td>{{.Day}}</td>
+				<td>{{.Hour}}</td>
+				<td>{{.Prev}}</td>
+				<td>{{.Now}}</td>
+				<td>{{.Diff}}</td>
+				<td>{{.Seen}}</td>
+				<td>{{.File}}:{{.Line}}</td>
 			</tr>\n
 		{{end}}
 	</table>`)
