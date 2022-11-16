@@ -38,25 +38,7 @@ type line struct {
 }
 
 func totals(day, hour, prev, last count.Ledger) string {
-	t, _ := template.New("teams").Parse(`
-	<table>
-		<tr>
-			{{range .Headers }}
-				<th>{{.}}</th>
-			{{end}}
-		</tr>\n
-		{{ range .Data }}
-			<tr>
-				<td>{{.Day}}</td>
-				<td>{{.Hour}}</td>
-				<td>{{.Prev}}</td>
-				<td>{{.Now}}</td>
-				<td>{{.Diff}}</td>
-				<td>{{.Seen}}</td>
-				<td>{{.File}}:{{.Line}}</td>
-			</tr>\n
-		{{end}}
-	</table>`)
+	t, _ := template.New("teams").Parse(`<table><tr>{{range .Headers }}<th>{{.}}</th>{{end}}</tr>\n{{ range .Data }}<tr><td>{{.Day}}</td><td>{{.Hour}}</td><td>{{.Prev}}</td><td>{{.Now}}</td><td>{{.Diff}}</td><td>{{.Seen}}</td><td>{{.File}}:{{.Line}}</td></tr>\n{{end}}</table>`)
 
 	var lines []line
 	for _, file := range day.GetTopFileInstances(30) {
