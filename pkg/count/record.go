@@ -28,9 +28,7 @@ func NewLedger() Ledger {
 
 func (l Ledger) Add(r Record) {
 	if _, ok := l[r.File]; ok {
-		count := l[r.File]
-		count.Count++
-		l[r.File] = count
+		l[r.File] = l[r.File].Incriment()
 	} else {
 		l[r.File] = Count{
 			Record: r,
@@ -45,9 +43,7 @@ func (l Ledger) Add(r Record) {
 
 func (l Ledger) AddCount(f string, c Count) {
 	if _, ok := l[f]; ok {
-		count := l[f]
-		count.Count = count.Count + c.Count
-		l[f] = count
+		l[f] = l[f].AddCount(c)
 	} else {
 		l[f] = c
 	}
@@ -112,4 +108,16 @@ func (l Ledgers) TotalLedger() Ledger {
 	}
 
 	return nl
+}
+
+func (c Count) AddCount(nC Count) Count {
+	c.Count = c.Count + nC.Count
+
+	return c
+}
+
+func (c Count) Incriment() Count {
+	c.Count++
+
+	return c
 }
