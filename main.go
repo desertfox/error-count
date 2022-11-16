@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	intervalLedgers = make(count.Ledgers, 0)
-	hourLedgers     = make(count.Ledgers, 0)
-	start           = time.Now()
+	intervalLedgers           = make(count.Ledgers, 0)
+	hourLedgers               = make(count.Ledgers, 0)
+	start                     = time.Now()
+	reset           time.Time = start.Add(time.Hour * 24)
 )
 
 func main() {
@@ -64,7 +65,7 @@ func doInterval() {
 
 	teams.SendResults(
 		webhookUrl,
-		fmt.Sprintf("%s %sm Error Counts. Uptime: %s", teamsTitle, freq, time.Since(start)),
+		fmt.Sprintf("%s %sm Error Counts. Uptime:%s Reset:%s", teamsTitle, freq, time.Since(start), reset),
 		totals(
 			t.TotalLedger(),
 			t.GetLast(),
@@ -79,6 +80,10 @@ func doInterval() {
 
 	if len(hourLedgers) == 24 {
 		hourLedgers = make(count.Ledgers, 0)
+	}
+
+	if time.Now().After(reset) {
+		reset = time.Now().Add(time.Hour * 24)
 	}
 
 }
