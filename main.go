@@ -65,7 +65,7 @@ func doInterval() {
 
 	teams.SendResults(
 		webhookUrl,
-		fmt.Sprintf("%s %sm Error Counts. Uptime:%.f Reset:%.f", teamsTitle, freq, time.Since(start).Hours(), time.Until(reset).Hours()),
+		fmt.Sprintf("error-count-%s, report every %sm. uptime %.fh totals reset in %.fh", teamsTitle, freq, time.Since(start).Hours(), time.Until(reset).Hours()),
 		totals(
 			t.TotalLedger(),
 			t.GetLast(),
