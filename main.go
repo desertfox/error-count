@@ -6,16 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"desertfox.dev/error-count/v1/pkg/category"
-	"desertfox.dev/error-count/v1/pkg/count"
-	"desertfox.dev/error-count/v1/pkg/teams"
-	"desertfox.dev/error-count/v1/pkg/worker"
 	"github.com/go-co-op/gocron"
 )
 
 var (
-	intervalLedgers           = make(count.Ledgers, 0)
-	hourLedgers               = make(count.Ledgers, 0)
+	intervalLedgers           = make(Ledgers, 0)
+	hourLedgers               = make(Ledgers, 0)
 	start                     = time.Now()
 	reset           time.Time = start.Add(time.Hour * 24)
 )
@@ -30,23 +26,23 @@ func main() {
 
 func doInterval() {
 	lines := strings.Split(doQuery(), "\n")
-	jobs := make([]worker.Job, len(lines))
+	jobs := make([]Job, len(lines))
 
 	for i := range lines {
-		jobs[i] = worker.Job{
+		jobs[i] = Job{
 			Data:   lines[i],
-			ExecFn: category.FileLineKeyFn(),
+			ExecFn: FileLineKeyFn(),
 		}
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
-	wp := worker.NewWP(5)
+	wp := NewWP(5)
 	go wp.Queue(jobs)
 	go wp.Run(ctx)
 
-	ledger := count.NewLedger()
+	ledger := NewLedger()
 	for r := range wp.Results() {
 		if r.Err == nil {
 			ledger.Add(r)
@@ -58,12 +54,12 @@ func doInterval() {
 		hourLedgers.Add(intervalLedgers.TotalLedger())
 	}
 
-	var t count.Ledgers = hourLedgers
+	var t Ledgers = hourLedgers
 	if len(hourLedgers) == 0 {
-		t = count.Ledgers{intervalLedgers.TotalLedger()}
+		t = Ledgers{intervalLedgers.TotalLedger()}
 	}
 
-	teams.SendResults(
+	SendResults(
 		webhookUrl,
 		fmt.Sprintf("error-count-%s, report every %sm. uptime %.fh totals reset in %.fh", teamsTitle, freq, time.Since(start).Hours(), time.Until(reset).Hours()),
 		totals(
@@ -75,11 +71,11 @@ func doInterval() {
 	)
 
 	if len(intervalLedgers) == 6 {
-		intervalLedgers = make(count.Ledgers, 0)
+		intervalLedgers = make(Ledgers, 0)
 	}
 
 	if len(hourLedgers) == 24 {
-		hourLedgers = make(count.Ledgers, 0)
+		hourLedgers = make(Ledgers, 0)
 	}
 
 	if time.Now().After(reset) {

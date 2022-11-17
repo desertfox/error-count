@@ -1,23 +1,44 @@
-package worker
+package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
-
-	"desertfox.dev/error-count/v1/pkg/count"
 )
 
 type Pool struct {
 	instances int
 	jobs      chan Job
-	results   chan count.Record
+	results   chan Record
+}
+
+type Job struct {
+	Data   string
+	ExecFn FnExec
+}
+
+type FnExec func(ctx context.Context, s string) (string, int, error)
+
+func (j Job) execute(ctx context.Context) Record {
+	file, line, err := j.ExecFn(ctx, j.Data)
+	if err != nil {
+		fmt.Println(err)
+		return Record{
+			Err: err,
+		}
+	}
+
+	return Record{
+		File: file,
+		Line: line,
+	}
 }
 
 func NewWP(instances int) Pool {
 	return Pool{
 		instances: instances,
 		jobs:      make(chan Job, instances),
-		results:   make(chan count.Record, instances),
+		results:   make(chan Record, instances),
 	}
 }
 
@@ -28,7 +49,7 @@ func (wp Pool) Queue(jobs []Job) {
 	close(wp.jobs)
 }
 
-func (wp Pool) Results() <-chan count.Record {
+func (wp Pool) Results() <-chan Record {
 	return wp.results
 }
 
@@ -42,7 +63,7 @@ func (wp Pool) Run(ctx context.Context) {
 	close(wp.results)
 }
 
-func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results chan<- count.Record) {
+func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results chan<- Record) {
 	defer wg.Done()
 	for {
 		select {
@@ -52,7 +73,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan Job, results ch
 			}
 			results <- job.execute(ctx)
 		case <-ctx.Done():
-			results <- count.Record{
+			results <- Record{
 				Err: ctx.Err(),
 			}
 			return

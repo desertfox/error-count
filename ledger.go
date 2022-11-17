@@ -1,4 +1,4 @@
-package count
+package main
 
 import (
 	"sort"

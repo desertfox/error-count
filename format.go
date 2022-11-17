@@ -3,33 +3,12 @@ package main
 import (
 	"bytes"
 	"text/template"
-
-	"desertfox.dev/error-count/v1/pkg/count"
 )
 
 var (
-	//header string = "<pre>DAY  HOUR PREV NOW  +/- FIRST_SEEN FILE <br>"
-	headers []string = []string{"DAY", "HOUR", "PREV", "NOW", "+/-", "FIRST_SEEN", "FILE"}
-	//line       string = "%04d_%04d_%04d_%04d_%+05d %s %s %d <br>"
-	timeFormat string = "2006-01-02 15:04:05"
+	headers    []string = []string{"DAY", "HOUR", "PREV", "NOW", "+/-", "FIRST_SEEN", "FILE"}
+	timeFormat string   = "2006-01-02 15:04:05"
 )
-
-/*
-func totals(day, hour, prev, last count.Ledger) string {
-	var output string = header
-	for _, file := range day.GetTopFileInstances(30) {
-		d := day.GetCount(file)
-		h := hour.GetCount(file)
-		p := prev.GetCount(file)
-		c := last.GetCount(file)
-
-		output = output + fmt.Sprintf(line, d.Count, h.Count, p.Count, c.Count, c.Count-p.Count, count.TimeLedger[file].Format(timeFormat), d.Record.File, d.Record.Line)
-	}
-	output = output + "</pre>"
-
-	return output
-}
-*/
 
 type line struct {
 	Day, Hour, Prev, Now, Diff int
@@ -37,7 +16,7 @@ type line struct {
 	Line                       int
 }
 
-func totals(day, hour, prev, last count.Ledger) string {
+func totals(day, hour, prev, last Ledger) string {
 	t, _ := template.New("teams").Parse(`<table><tr>{{range .Headers }}<th>{{.}}</th>{{end}}</tr>{{ range .Data }}<tr><td>{{.Day}}</td><td>{{.Hour}}</td><td>{{.Prev}}</td><td>{{.Now}}</td><td>{{.Diff}}</td><td>{{.Seen}}</td><td>{{.File}}:{{.Line}}</td></tr>{{end}}</table>`)
 
 	var lines []line
@@ -47,7 +26,7 @@ func totals(day, hour, prev, last count.Ledger) string {
 		p := prev.GetCount(file)
 		c := last.GetCount(file)
 
-		lines = append(lines, line{d.Count, h.Count, p.Count, c.Count, c.Count - p.Count, count.TimeLedger[file].Format(timeFormat), d.Record.File, d.Record.Line})
+		lines = append(lines, line{d.Count, h.Count, p.Count, c.Count, c.Count - p.Count, TimeLedger[file].Format(timeFormat), d.Record.File, d.Record.Line})
 	}
 
 	var b bytes.Buffer
