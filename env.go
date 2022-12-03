@@ -3,12 +3,7 @@ package main
 import "os"
 
 var (
-	freq        string = os.Getenv("EC_FREQ")
-	webhookUrl  string = os.Getenv("EC_TEAMSWEBHOOK")
-	graylogHost string = os.Getenv("EC_HOST")
-	graylogUser string = os.Getenv("EC_USER")
-	//password left off
-	graylogQuery    string = os.Getenv("EC_QUERY")
-	graylogStreamID string = os.Getenv("EC_STREAMID")
-	teamsTitle      string = os.Getenv("EC_TITLE")
+	freq                                                    string = os.Getenv("EC_FREQ")
+	webhookUrl, teamsTitle                                  string = os.Getenv("EC_TEAMSWEBHOOK"), os.Getenv("EC_TITLE")
+	graylogHost, graylogUser, graylogQuery, graylogStreamID string = os.Getenv("EC_HOST"), os.Getenv("EC_USER"), os.Getenv("EC_QUERY"), os.Getenv("EC_STREAMID")
 )

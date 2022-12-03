@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -13,16 +12,15 @@ type Pool struct {
 }
 
 type Job struct {
-	Data   string
-	ExecFn FnExec
+	Data string
+	Fnc  FnExec
 }
 
 type FnExec func(ctx context.Context, s string) (string, int, error)
 
 func (j Job) execute(ctx context.Context) Record {
-	file, line, err := j.ExecFn(ctx, j.Data)
+	file, line, err := j.Fnc(ctx, j.Data)
 	if err != nil {
-		fmt.Println(err)
 		return Record{
 			Err: err,
 		}
@@ -31,14 +29,6 @@ func (j Job) execute(ctx context.Context) Record {
 	return Record{
 		File: file,
 		Line: line,
-	}
-}
-
-func NewWP(instances int) Pool {
-	return Pool{
-		instances: instances,
-		jobs:      make(chan Job, instances),
-		results:   make(chan Record, instances),
 	}
 }
 

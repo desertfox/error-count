@@ -8,14 +8,14 @@ import (
 )
 
 func Test_fileline(t *testing.T) {
-	data, err := ioutil.ReadFile("../../sample_data/gl.csv")
+	data, err := ioutil.ReadFile("./sample_data/gl.csv")
 	if err != nil {
 		panic(err)
 	}
 	lines := strings.Split(string(data), "\n")
 
 	for i := range lines {
-		file, line, _ := FileLine(lines[i])
+		file, line, _ := line(lines[i]).parse()
 		t.Log(fmt.Sprintf("%s:%s:%d", lines[i], file, line))
 	}
 

@@ -3,41 +3,46 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-var (
-	fileRe     = regexp.MustCompile(`/[/\w+-]+`)
-	libFileRe  = regexp.MustCompile(`/lib/[/\w+-]+`)
-	filelineRe = regexp.MustCompile(`line \d+`)
-)
+var regex map[string]*regexp.Regexp = map[string]*regexp.Regexp{
+	"file":     regexp.MustCompile(`/[/\w+-]+`),
+	"lib":      regexp.MustCompile(`/lib/[/\w+-]+`),
+	"location": regexp.MustCompile(`line \d+`),
+}
 
-func FileLineKeyFn() func(ctx context.Context, s string) (string, int, error) {
+func fileLineFnc() func(ctx context.Context, s string) (string, int, error) {
 	return func(ctx context.Context, s string) (string, int, error) {
-		return FileLine(s)
+		return line(s).parse()
 	}
 }
 
-func FileLine(s string) (string, int, error) {
-	if filelineRe.MatchString(s) {
-		return getFile(s), getLine(s), nil
+type line string
+
+func (l line) parse() (string, int, error) {
+	if l.hasLocation() {
+		return l.file(), l.location(), nil
 	}
 	return "", 0, errors.New("no match found")
 }
 
-func getFile(s string) string {
-	f := libFileRe.FindString(s)
+func (l line) hasLocation() bool {
+	return regex["location"].MatchString(string(l))
+}
+
+func (l line) file() string {
+	f := regex["lib"].FindString(string(l))
+
 	parts := strings.Split(f, "/")
 
 	if len(parts) == 0 {
-		return fileRe.FindString(s)
+		return regex["file"].FindString(string(l))
 	}
 
 	if len(parts) < 2 {
-		fmt.Println(s, f)
 		return strings.Join(parts, "::")
 	}
 
@@ -49,8 +54,8 @@ func getFile(s string) string {
 	return strings.Join(parts[chomp:], "::")
 }
 
-func getLine(s string) int {
-	lineat := filelineRe.FindString(s)
-	line, _ := strconv.Atoi(strings.Split(lineat, " ")[1])
+func (l line) location() int {
+	lineat := strings.Split(regex["location"].FindString(string(l)), " ")[1]
+	line, _ := strconv.Atoi(lineat)
 	return line
 }

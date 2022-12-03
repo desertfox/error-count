@@ -3,83 +3,128 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
+	"github.com/desertfox/gograylog"
 	"github.com/go-co-op/gocron"
 )
 
-var (
-	intervalLedgers           = make(Ledgers, 0)
-	hourLedgers               = make(Ledgers, 0)
-	start                     = time.Now()
-	reset           time.Time = start.Add(time.Hour * 24)
-)
+var start, reset time.Time = time.Now(), start.Add(time.Hour * 24)
 
 func main() {
-	s := gocron.NewScheduler(time.UTC)
+	var (
+		timeLedger                   TimeLedger        = make(TimeLedger, 0)
+		hourLedgers, intervalLedgers Ledgers           = make(Ledgers, 0), make(Ledgers, 0)
+		s                            *gocron.Scheduler = gocron.NewScheduler(time.UTC)
+	)
 
-	s.Every(freq + "m").Do(doInterval)
+	s.Every(freq+"m").Do(interval, timeLedger, &hourLedgers, &intervalLedgers, query)
 
 	s.StartBlocking()
 }
 
-func doInterval() {
-	lines := strings.Split(doQuery(), "\n")
-	jobs := make([]Job, len(lines))
+func query() []string {
+	if len(os.Args) > 1 {
+		data, err := ioutil.ReadFile(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
+		return strings.Split(string(data), "\n")
+	}
 
-	for i := range lines {
+	c := gograylog.New(graylogHost, graylogUser, os.Getenv("EC_PASS"))
+
+	f, _ := strconv.Atoi(freq)
+
+	data, err := c.Execute(graylogQuery, graylogStreamID, []string{"message"}, 10000, f)
+	if err != nil {
+		fmt.Println("Unable to make graylog request", err)
+		return []string{}
+	}
+	return strings.Split(string(data), "\n")
+}
+
+func notify(t, s string) {
+	mstClient := goteamsnotify.NewClient()
+	mstClient.SkipWebhookURLValidationOnSend(true)
+
+	card := goteamsnotify.NewMessageCard()
+	card.Title, card.Text = t, s
+
+	if err := mstClient.Send(webhookUrl, card); err != nil {
+		log.Printf(
+			"failed to send message: %v",
+			err,
+		)
+	}
+}
+
+func interval(totalLedger TimeLedger, hourLedger, intervalLedger *Ledgers, query func() []string) {
+	rawLines := query()
+	jobs := make([]Job, len(rawLines))
+
+	for i := range rawLines {
 		jobs[i] = Job{
-			Data:   lines[i],
-			ExecFn: FileLineKeyFn(),
+			Data: rawLines[i],
+			Fnc:  fileLineFnc(),
 		}
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
-	wp := NewWP(5)
+	wp := Pool{
+		instances: 5,
+		jobs:      make(chan Job, 5),
+		results:   make(chan Record, 5),
+	}
 	go wp.Queue(jobs)
 	go wp.Run(ctx)
 
-	ledger := NewLedger()
-	for r := range wp.Results() {
-		if r.Err == nil {
-			ledger.Add(r)
+	ledger := make(Ledger, 0)
+	for record := range wp.Results() {
+		if record.Err != nil {
+			fmt.Println(record.Err)
 		}
+		ledger.Incriment(record)
+		totalLedger.Add(record)
 	}
-	intervalLedgers.Add(ledger)
+	intervalLedger.Add(ledger)
 
-	if len(intervalLedgers) == 6 {
-		hourLedgers.Add(intervalLedgers.TotalLedger())
-	}
-
-	var t Ledgers = hourLedgers
-	if len(hourLedgers) == 0 {
-		t = Ledgers{intervalLedgers.TotalLedger()}
+	if len(*intervalLedger) == 6 {
+		hourLedger.Add(intervalLedger.Total())
 	}
 
-	SendResults(
-		webhookUrl,
-		fmt.Sprintf("error-count-%s, report every %sm. uptime %.fh totals reset in %.fh", teamsTitle, freq, time.Since(start).Hours(), time.Until(reset).Hours()),
-		totals(
-			t.TotalLedger(),
-			t.GetLast(),
-			intervalLedgers.GetPrev(),
-			intervalLedgers.GetLast(),
-		),
+	var t Ledgers = *hourLedger
+	if len(*hourLedger) == 0 {
+		t = Ledgers{intervalLedger.Total()}
+	}
+
+	title := fmt.Sprintf(
+		"error-count-%s, report every %sm. uptime %.fh totals reset in %.fh",
+		teamsTitle,
+		freq,
+		time.Since(start).Hours(),
+		time.Until(reset).Hours(),
 	)
+	totals := total(t.Total(), t.Last(), intervalLedger.Prev(), intervalLedger.Last(), totalLedger)
+	notify(title, totals)
 
-	if len(intervalLedgers) == 6 {
-		intervalLedgers = make(Ledgers, 0)
+	if len(*intervalLedger) == 6 {
+		*intervalLedger = make(Ledgers, 0)
 	}
 
-	if len(hourLedgers) == 24 {
-		hourLedgers = make(Ledgers, 0)
+	if len(*hourLedger) == 24 {
+		*hourLedger = make(Ledgers, 0)
 	}
 
 	if time.Now().After(reset) {
 		reset = time.Now().Add(time.Hour * 24)
 	}
-
 }

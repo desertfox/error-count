@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var TimeLedger map[string]time.Time = make(map[string]time.Time, 0)
-
 type Record struct {
 	File string
 	Line int
@@ -18,15 +16,19 @@ type Count struct {
 	Count  int
 }
 
+type TimeLedger map[string]time.Time
+
 type Ledger map[string]Count
 
 type Ledgers []Ledger
 
-func NewLedger() Ledger {
-	return make(Ledger, 0)
+func (tL TimeLedger) Add(r Record) {
+	if _, ok := tL[r.File]; !ok {
+		tL[r.File] = time.Now()
+	}
 }
 
-func (l Ledger) Add(r Record) {
+func (l Ledger) Incriment(r Record) {
 	if _, ok := l[r.File]; ok {
 		l[r.File] = l[r.File].Incriment()
 	} else {
@@ -35,21 +37,17 @@ func (l Ledger) Add(r Record) {
 			Count:  1,
 		}
 	}
-
-	if _, ok := TimeLedger[r.File]; !ok {
-		TimeLedger[r.File] = time.Now()
-	}
 }
 
-func (l Ledger) AddCount(f string, c Count) {
+func (l Ledger) Add(f string, c Count) {
 	if _, ok := l[f]; ok {
-		l[f] = l[f].AddCount(c)
+		l[f] = l[f].Add(c)
 	} else {
 		l[f] = c
 	}
 }
 
-func (l Ledger) GetCount(file string) Count {
+func (l Ledger) Get(file string) Count {
 	if c, ok := l[file]; ok {
 		return c
 	}
@@ -61,7 +59,7 @@ func (l Ledger) GetCount(file string) Count {
 	}
 }
 
-func (l Ledger) GetTopFileInstances(c int) []string {
+func (l Ledger) Top(c int) []string {
 	switch {
 	case len(l) == 0:
 		return []string{}
@@ -82,35 +80,35 @@ func (l *Ledgers) Add(newL Ledger) {
 	*l = append(*l, newL)
 }
 
-func (l Ledgers) GetPrev() Ledger {
+func (l Ledgers) Prev() Ledger {
 	if len(l) < 2 {
-		return NewLedger()
+		return make(Ledger, 0)
 	}
 
 	return l[len(l)-2]
 }
 
-func (l Ledgers) GetLast() Ledger {
+func (l Ledgers) Last() Ledger {
 	if len(l) < 1 {
-		return NewLedger()
+		return make(Ledger, 0)
 	}
 
 	return l[len(l)-1]
 }
 
-func (l Ledgers) TotalLedger() Ledger {
-	nl := NewLedger()
+func (l Ledgers) Total() Ledger {
+	newLedger := make(Ledger, 0)
 
 	for _, ledger := range l {
 		for file, count := range ledger {
-			nl.AddCount(file, count)
+			newLedger.Add(file, count)
 		}
 	}
 
-	return nl
+	return newLedger
 }
 
-func (c Count) AddCount(nC Count) Count {
+func (c Count) Add(nC Count) Count {
 	c.Count = c.Count + nC.Count
 
 	return c
