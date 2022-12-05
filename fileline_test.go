@@ -15,8 +15,8 @@ func Test_fileline(t *testing.T) {
 	lines := strings.Split(string(data), "\n")
 
 	for i := range lines {
-		file, line, _ := line(lines[i]).parse()
-		t.Log(fmt.Sprintf("%s:%s:%d", lines[i], file, line))
+		r := line(lines[i]).parse()
+		t.Log(fmt.Sprintf("%s:%s:%d", lines[i], r.File, r.Location))
 	}
 
 }

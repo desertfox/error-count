@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -15,7 +14,10 @@ import (
 	"github.com/go-co-op/gocron"
 )
 
-var start, reset time.Time = time.Now(), start.Add(time.Hour * 24)
+var (
+	start, reset             time.Time = time.Now(), start.Add(time.Hour * 24)
+	poolCount, resetInterval int       = 5, 60 / 15
+)
 
 func main() {
 	var (
@@ -30,19 +32,11 @@ func main() {
 }
 
 func query() []string {
-	if len(os.Args) > 1 {
-		data, err := ioutil.ReadFile(os.Args[1])
-		if err != nil {
-			panic(err)
-		}
-		return strings.Split(string(data), "\n")
-	}
-
-	c := gograylog.New(graylogHost, graylogUser, os.Getenv("EC_PASS"))
+	gg := gograylog.New(graylogHost, graylogUser, os.Getenv("EC_PASS"))
 
 	f, _ := strconv.Atoi(freq)
 
-	data, err := c.Execute(graylogQuery, graylogStreamID, []string{"message"}, 10000, f)
+	data, err := gg.Execute(graylogQuery, graylogStreamID, []string{"message"}, 10000, f)
 	if err != nil {
 		fmt.Println("Unable to make graylog request", err)
 		return []string{}
@@ -65,45 +59,56 @@ func notify(t, s string) {
 	}
 }
 
-func interval(totalLedger TimeLedger, hourLedger, intervalLedger *Ledgers, query func() []string) {
-	rawLines := query()
-	jobs := make([]Job, len(rawLines))
+func interval(timeLedger TimeLedger, hourLedger, intervalLedger *Ledgers, query func() []string) {
+	var (
+		jobs   []Job
+		ledger Ledger = make(Ledger, 0)
+	)
 
-	for i := range rawLines {
-		jobs[i] = Job{
-			Data: rawLines[i],
+	for _, line := range query() {
+		jobs = append(jobs, Job{
+			Data: line,
 			Fnc:  fileLineFnc(),
-		}
+		})
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
 	wp := Pool{
-		instances: 5,
-		jobs:      make(chan Job, 5),
-		results:   make(chan Record, 5),
+		instances: poolCount,
+		jobs:      make(chan Job, poolCount),
+		results:   make(chan Record, poolCount),
 	}
 	go wp.Queue(jobs)
 	go wp.Run(ctx)
 
-	ledger := make(Ledger, 0)
 	for record := range wp.Results() {
 		if record.Err != nil {
 			fmt.Println(record.Err)
+			continue
 		}
-		ledger.Incriment(record)
-		totalLedger.Add(record)
+		ledger.Update(record)
+		timeLedger.Track(record)
 	}
 	intervalLedger.Add(ledger)
 
-	if len(*intervalLedger) == 6 {
+	if len(*intervalLedger) >= resetInterval {
 		hourLedger.Add(intervalLedger.Total())
+
+		defer func() {
+			*intervalLedger = make(Ledgers, 0)
+		}()
 	}
 
-	var t Ledgers = *hourLedger
-	if len(*hourLedger) == 0 {
-		t = Ledgers{intervalLedger.Total()}
+	hL := *hourLedger
+	switch len(*hourLedger) {
+	case 0:
+		hL = Ledgers{intervalLedger.Total()}
+	case 24:
+		defer func() {
+			*hourLedger = make(Ledgers, 0)
+		}()
 	}
 
 	title := fmt.Sprintf(
@@ -113,16 +118,8 @@ func interval(totalLedger TimeLedger, hourLedger, intervalLedger *Ledgers, query
 		time.Since(start).Hours(),
 		time.Until(reset).Hours(),
 	)
-	totals := total(t.Total(), t.Last(), intervalLedger.Prev(), intervalLedger.Last(), totalLedger)
+	totals := total(hL.Total(), hL.Last(), intervalLedger.Prev(), intervalLedger.Last(), timeLedger)
 	notify(title, totals)
-
-	if len(*intervalLedger) == 6 {
-		*intervalLedger = make(Ledgers, 0)
-	}
-
-	if len(*hourLedger) == 24 {
-		*hourLedger = make(Ledgers, 0)
-	}
 
 	if time.Now().After(reset) {
 		reset = time.Now().Add(time.Hour * 24)

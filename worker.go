@@ -16,20 +16,10 @@ type Job struct {
 	Fnc  FnExec
 }
 
-type FnExec func(ctx context.Context, s string) (string, int, error)
+type FnExec func(ctx context.Context, s string) Record
 
 func (j Job) execute(ctx context.Context) Record {
-	file, line, err := j.Fnc(ctx, j.Data)
-	if err != nil {
-		return Record{
-			Err: err,
-		}
-	}
-
-	return Record{
-		File: file,
-		Line: line,
-	}
+	return j.Fnc(ctx, j.Data)
 }
 
 func (wp Pool) Queue(jobs []Job) {

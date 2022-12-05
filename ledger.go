@@ -6,9 +6,9 @@ import (
 )
 
 type Record struct {
-	File string
-	Line int
-	Err  error
+	File     string
+	Location int
+	Err      error
 }
 
 type Count struct {
@@ -22,13 +22,13 @@ type Ledger map[string]Count
 
 type Ledgers []Ledger
 
-func (tL TimeLedger) Add(r Record) {
+func (tL TimeLedger) Track(r Record) {
 	if _, ok := tL[r.File]; !ok {
 		tL[r.File] = time.Now()
 	}
 }
 
-func (l Ledger) Incriment(r Record) {
+func (l Ledger) Update(r Record) {
 	if _, ok := l[r.File]; ok {
 		l[r.File] = l[r.File].Incriment()
 	} else {

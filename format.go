@@ -17,19 +17,20 @@ type tableRow struct {
 }
 
 func total(day, hour, prev, last Ledger, tL TimeLedger) string {
-	t, _ := template.New("teams").Parse(`<table><tr>{{range .Headers }}<th>{{.}}</th>{{end}}</tr>{{ range .Data }}<tr><td>{{.Day}}</td><td>{{.Hour}}</td><td>{{.Prev}}</td><td>{{.Now}}</td><td>{{.Diff}}</td><td>{{.Seen}}</td><td>{{.File}}:{{.Line}}</td></tr>{{end}}</table>`)
-
 	var (
 		rows []tableRow
 		b    bytes.Buffer
 	)
+
+	t, _ := template.New("teams").Parse(`<table><tr>{{range .Headers }}<th>{{.}}</th>{{end}}</tr>{{ range .Data }}<tr><td>{{.Day}}</td><td>{{.Hour}}</td><td>{{.Prev}}</td><td>{{.Now}}</td><td>{{.Diff}}</td><td>{{.Seen}}</td><td>{{.File}}:{{.Line}}</td></tr>{{end}}</table>`)
+
 	for _, file := range day.Top(30) {
 		d := day.Get(file)
 		h := hour.Get(file)
 		p := prev.Get(file)
 		c := last.Get(file)
 
-		rows = append(rows, tableRow{d.Count, h.Count, p.Count, c.Count, c.Count - p.Count, tL[file].Format(format), d.Record.File, d.Record.Line})
+		rows = append(rows, tableRow{d.Count, h.Count, p.Count, c.Count, c.Count - p.Count, tL[file].Format(format), d.Record.File, d.Record.Location})
 	}
 
 	err := t.Execute(&b, struct {

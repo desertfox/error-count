@@ -14,19 +14,24 @@ var regex map[string]*regexp.Regexp = map[string]*regexp.Regexp{
 	"location": regexp.MustCompile(`line \d+`),
 }
 
-func fileLineFnc() func(ctx context.Context, s string) (string, int, error) {
-	return func(ctx context.Context, s string) (string, int, error) {
+type line string
+
+func fileLineFnc() func(ctx context.Context, s string) Record {
+	return func(ctx context.Context, s string) Record {
 		return line(s).parse()
 	}
 }
 
-type line string
-
-func (l line) parse() (string, int, error) {
+func (l line) parse() Record {
 	if l.hasLocation() {
-		return l.file(), l.location(), nil
+		return Record{
+			File:     l.file(),
+			Location: l.location(),
+		}
 	}
-	return "", 0, errors.New("no match found")
+	return Record{
+		Err: errors.New("no match found"),
+	}
 }
 
 func (l line) hasLocation() bool {
